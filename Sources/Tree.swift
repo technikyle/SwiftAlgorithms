@@ -17,22 +17,90 @@ public class Tree<T> {
     public func add(child: Tree) {
         children.append(child)
     }
-}
-
-extension Tree where T: Equatable {
-    public func contains(value: T) -> Bool {
-        if self.value == value {
-            return true
+    
+    public func depthFirstMappedArray(callback: (T) -> T ) -> [T] {
+        var mappedValues = [T]()
+        depthFirstForEach( { (value) in
+            let mappedValue = callback(value)
+            mappedValues.append(mappedValue)
+        })
+        return mappedValues
+    }
+    
+    public func widthFirstMappedArray(callback: (T) -> T ) -> [T] {
+        var mappedValues = [T]()
+        widthFirstForEach({ (value) in
+            let mappedValue = callback(value)
+            mappedValues.append(mappedValue)
+        })
+        return mappedValues
+    }
+    
+    public func depthFirstForEach(_ callback: (T) -> Void, until: @escaping ((T) -> Bool) = { _ in return false }) {
+        if !until(self.value) {
+            callback(self.value)
+        } else {
+            return;
         }
         
         for child in children {
-            let found = child.contains(value: value)
-            if (found) {
-                return true
+            var childResult = false
+            func untilWrapper(value: T) -> Bool {
+                let untilResult = until(value)
+                childResult = untilResult
+                return untilResult
+            }
+            child.depthFirstForEach(callback, until: untilWrapper)
+            if (childResult == true) {
+                break;
             }
         }
+    }
+    
+    public func widthFirstForEach(_ callback: (T) -> Void, until: @escaping ((T) -> Bool) = { _ in return false }) {
+        var treeQueue = [Tree]()
+        treeQueue.append(self)
         
-        return false
+        while !treeQueue.isEmpty {
+            let dequeuedTree = treeQueue.removeFirst()
+            if !until(dequeuedTree.value) {
+                callback(dequeuedTree.value)
+            } else {
+                break;
+            }
+            
+            for child in dequeuedTree.children {
+                treeQueue.append(child)
+            }
+        }
     }
 }
 
+extension Tree where T: Equatable {
+    public func depthFirstSearch(value: T) -> Bool {
+        var found = false
+        
+        depthFirstForEach({ aValue in
+            if (aValue == value) {
+                found = true
+            }
+        }, until: { (aValue) in
+            return aValue == value
+        })
+        return found
+    }
+    
+    public func widthFirstSearch(value: T) -> Bool {
+        var found = false
+        
+        widthFirstForEach({ aValue in
+            if (aValue == value) {
+                found = true
+            }
+        }, until: { (aValue) in
+            return aValue == value
+        })
+        
+        return found
+    }
+}

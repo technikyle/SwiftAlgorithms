@@ -6,7 +6,7 @@
 //
 //
 
-public class LinkedList<T: Equatable> {
+public class LinkedList<T> {
     public typealias Node = LinkedListNode<T>
     
     private(set) public var first: Node?
@@ -92,7 +92,9 @@ public class LinkedList<T: Equatable> {
         remove(node: last)
         return element
     }
-    
+}
+
+extension LinkedList where T: Equatable {
     func indexOf(_ value: T) -> Int? {
         var index = 0
         
@@ -129,9 +131,7 @@ public class LinkedList<T: Equatable> {
             node = node!.next
         }
     }
-    
 }
-
 
 public class LinkedListNode<T> {
     public var value: T

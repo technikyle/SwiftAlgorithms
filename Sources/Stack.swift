@@ -6,7 +6,7 @@
 //
 //
 
-class Stack<T: Equatable> {
+class Stack<T> {
     private var storage = LinkedList<T>()
     private(set) public var size: Int = 0
     
