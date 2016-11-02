@@ -1,7 +1,7 @@
 language: objective-c
 osx_image: xcode8.0
-
-
+env:
+  - TOOLCHAINS=swift
 script:
   - swift build --clean
   - swift build
