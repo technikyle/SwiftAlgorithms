@@ -1,5 +1,5 @@
 import XCTest
-@testable import Algorithms
+@testable import SwiftAlgorithms
 
 class LinkedListTests: XCTestCase {
     func testInit() {

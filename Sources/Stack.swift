@@ -1,6 +1,6 @@
 //
 //  Stack.swift
-//  Algorithms
+//  SwiftAlgorithms
 //
 //  Created by Kyle Rokita on 10/25/16.
 //

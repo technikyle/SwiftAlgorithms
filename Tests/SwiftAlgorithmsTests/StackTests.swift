@@ -1,5 +1,5 @@
 import XCTest
-@testable import Algorithms
+@testable import SwiftAlgorithms
 
 class StackTests: XCTestCase {
     
@@ -11,7 +11,6 @@ class StackTests: XCTestCase {
         
         stack.push("b")
         XCTAssertEqual(stack.size, 2)
-
     }
     
     func testPop() {
