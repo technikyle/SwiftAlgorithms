@@ -18,61 +18,110 @@ public class Tree<T> {
         children.append(child)
     }
     
-    public func depthFirstMappedArray(callback: (T) -> T ) -> [T] {
-        var mappedValues = [T]()
-        depthFirstForEach( { (value) in
-            let mappedValue = callback(value)
-            mappedValues.append(mappedValue)
-        })
-        return mappedValues
+    public func map(_ callback: ((T) -> T) = { $0 }) -> Tree {
+        let mappedValue = callback(self.value)
+        let tree = Tree(value: mappedValue)
+        for child in self.children {
+            tree.add(child: child.map(callback))
+        }
+        return tree
     }
     
-    public func widthFirstMappedArray(callback: (T) -> T ) -> [T] {
-        var mappedValues = [T]()
-        widthFirstForEach({ (value) in
-            let mappedValue = callback(value)
-            mappedValues.append(mappedValue)
-        })
-        return mappedValues
+    public func depthFirstForEach(_ callback: (T, UInt) -> Void) {
+        depthFirstForEach(callback, currentDepth: 0)
     }
     
-    public func depthFirstForEach(_ callback: (T) -> Void, until: @escaping ((T) -> Bool) = { _ in return false }) {
-        if !until(self.value) {
-            callback(self.value)
+    private func depthFirstForEach(_ callback: (T, UInt) -> Void, currentDepth: UInt) {
+        callback(self.value, currentDepth)
+        
+        for child in children {
+            child.depthFirstForEach(callback, currentDepth: currentDepth + 1)
+        }
+    }
+    
+    public func widthFirstForEach(_ callback: (T, UInt) -> Void) {
+        var treeQueue = [(tree: Tree, depth: UInt)]()
+        treeQueue.append((self, 0))
+        
+        while !treeQueue.isEmpty {
+            let dequeued = treeQueue.removeFirst()
+            let tree = dequeued.tree
+            let depth = dequeued.depth
+
+            callback(tree.value, depth)
+            
+            for child in tree.children {
+                treeQueue.append((child, depth + 1))
+            }
+        }
+    }
+    
+    public func depthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool)) {
+        depthFirstForEach(callback, until: until, currentDepth: 0)
+    }
+    
+    private func depthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool), currentDepth: UInt) {
+        if !until(self.value, currentDepth) {
+            callback(self.value, currentDepth)
         } else {
             return;
         }
         
         for child in children {
             var childResult = false
-            func untilWrapper(value: T) -> Bool {
-                let untilResult = until(value)
+            func untilWrapper(value: T, currentDepth: UInt) -> Bool {
+                let untilResult = until(value, currentDepth)
                 childResult = untilResult
                 return untilResult
             }
-            child.depthFirstForEach(callback, until: untilWrapper)
+            child.depthFirstForEach(callback, until: untilWrapper, currentDepth: currentDepth + 1)
             if (childResult == true) {
                 break;
             }
         }
     }
     
-    public func widthFirstForEach(_ callback: (T) -> Void, until: @escaping ((T) -> Bool) = { _ in return false }) {
-        var treeQueue = [Tree]()
-        treeQueue.append(self)
+    public func widthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool)) {
+        widthFirstForEach(callback, until: until, currentDepth: 0)
+    }
+    
+    private func widthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool), currentDepth: UInt) {
+        var treeQueue = [(tree: Tree, depth: UInt)]()
+        treeQueue.append((self, 0))
         
         while !treeQueue.isEmpty {
-            let dequeuedTree = treeQueue.removeFirst()
-            if !until(dequeuedTree.value) {
-                callback(dequeuedTree.value)
+            let dequeued = treeQueue.removeFirst()
+            let tree = dequeued.tree
+            let depth = dequeued.depth
+
+            if !until(tree.value, depth) {
+                callback(tree.value, depth)
             } else {
                 break;
             }
             
-            for child in dequeuedTree.children {
-                treeQueue.append(child)
+            for child in tree.children {
+                treeQueue.append((child, depth + 1))
             }
         }
+    }
+    
+    public func depthFirstMap(_ callback: (T) -> T = { $0 } ) -> [T] {
+        var mappedValues = [T]()
+        depthFirstForEach({ value, depth in
+            let mappedValue = callback(value)
+            mappedValues.append(mappedValue)
+        })
+        return mappedValues
+    }
+    
+    public func widthFirstMap(_ callback: (T) -> T = { $0 } ) -> [T] {
+        var mappedValues = [T]()
+        widthFirstForEach({ value, depth in
+            let mappedValue = callback(value)
+            mappedValues.append(mappedValue)
+        })
+        return mappedValues
     }
 }
 
@@ -80,12 +129,12 @@ extension Tree where T: Equatable {
     public func depthFirstSearch(value: T) -> Bool {
         var found = false
         
-        depthFirstForEach({ aValue in
+        depthFirstForEach({ aValue, aDepth in
             if (aValue == value) {
                 found = true
             }
         }, until: { (aValue) in
-            return aValue == value
+            return found == true
         })
         return found
     }
@@ -93,14 +142,38 @@ extension Tree where T: Equatable {
     public func widthFirstSearch(value: T) -> Bool {
         var found = false
         
-        widthFirstForEach({ aValue in
+        widthFirstForEach({ aValue, aDepth in
             if (aValue == value) {
                 found = true
             }
         }, until: { (aValue) in
-            return aValue == value
+            return found == true
         })
         
         return found
+    }
+    
+    public func orderedComparison(to: Tree) -> Bool {
+        guard self !== to else {
+            return true
+        }
+        
+        guard self.value == to.value else {
+            return false
+        }
+        
+        guard self.children.count == to.children.count else {
+            return false
+        }
+        
+        for index in 0 ..< self.children.count {
+            let child1 = self.children[index]
+            let child2 = to.children[index]
+            if !child1.orderedComparison(to: child2) {
+                return false
+            }
+        }
+        
+        return true
     }
 }

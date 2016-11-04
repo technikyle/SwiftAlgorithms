@@ -8,7 +8,6 @@
 
 public class BinarySearchTree<T> {
     public var value: T
-    
     public var left: BinarySearchTree?
     public var right: BinarySearchTree?
 
