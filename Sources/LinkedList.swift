@@ -31,8 +31,10 @@ public class LinkedList<T> {
     }
     
     private func remove(node: Node) {
-        guard let first = first,
-              let last = last else {
+        guard
+            let first = first,
+            let last = last
+        else {
             return
         }
         

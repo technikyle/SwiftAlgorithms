@@ -14,7 +14,7 @@ public class Tree<T> {
         self.value = value
     }
     
-    public func add(child: Tree) {
+    public func insert(_ child: Tree) {
         children.append(child)
     }
     
@@ -22,7 +22,7 @@ public class Tree<T> {
         let mappedValue = callback(self.value)
         let tree = Tree(value: mappedValue)
         for child in self.children {
-            tree.add(child: child.map(callback))
+            tree.insert(child.map(callback))
         }
         return tree
     }
