@@ -6,9 +6,10 @@
 //
 //
 
-public class Tree<T> {
+// final required for protocol TreeEnumberable children property
+final public class Tree<T>: TreeEnumerable {
     public var value: T
-    public var children = [Tree]()
+    private(set) public var children = [Tree]()
     
     public init(value: T) {
         self.value = value
@@ -17,8 +18,17 @@ public class Tree<T> {
     public func insert(_ child: Tree) {
         children.append(child)
     }
+}
+
+public protocol TreeEnumerable {
+    associatedtype T
     
-    public func map(_ callback: ((T) -> T) = { $0 }) -> Tree {
+    var value: T { get set }
+    var children: [Self] { get }
+}
+
+extension TreeEnumerable {
+    public func map(_ callback: ((T) -> T) = { $0 }) -> Tree<T> {
         let mappedValue = callback(self.value)
         let tree = Tree(value: mappedValue)
         for child in self.children {
@@ -40,20 +50,38 @@ public class Tree<T> {
     }
     
     public func widthFirstForEach(_ callback: (T, UInt) -> Void) {
-        var treeQueue = [(tree: Tree, depth: UInt)]()
-        treeQueue.append((self, 0))
+        var treeQueue = [(tree: Tree<T>, depth: UInt)]()
+        treeQueue.append((self as! Tree<T>, 0))
         
         while !treeQueue.isEmpty {
             let dequeued = treeQueue.removeFirst()
             let tree = dequeued.tree
             let depth = dequeued.depth
-
+            
             callback(tree.value, depth)
             
             for child in tree.children {
                 treeQueue.append((child, depth + 1))
             }
         }
+    }
+    
+    public func depthFirstMap(_ callback: (T) -> T = { $0 } ) -> [T] {
+        var mappedValues = [T]()
+        depthFirstForEach({ value, depth in
+            let mappedValue = callback(value)
+            mappedValues.append(mappedValue)
+        })
+        return mappedValues
+    }
+    
+    public func widthFirstMap(_ callback: (T) -> T = { $0 } ) -> [T] {
+        var mappedValues = [T]()
+        widthFirstForEach({ value, depth in
+            let mappedValue = callback(value)
+            mappedValues.append(mappedValue)
+        })
+        return mappedValues
     }
     
     public func depthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool)) {
@@ -86,14 +114,14 @@ public class Tree<T> {
     }
     
     private func widthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool), currentDepth: UInt) {
-        var treeQueue = [(tree: Tree, depth: UInt)]()
-        treeQueue.append((self, 0))
+        var treeQueue = [(tree: Tree<T>, depth: UInt)]()
+        treeQueue.append((self as! Tree<T>, 0))
         
         while !treeQueue.isEmpty {
             let dequeued = treeQueue.removeFirst()
             let tree = dequeued.tree
             let depth = dequeued.depth
-
+            
             if !until(tree.value, depth) {
                 callback(tree.value, depth)
             } else {
@@ -105,27 +133,9 @@ public class Tree<T> {
             }
         }
     }
-    
-    public func depthFirstMap(_ callback: (T) -> T = { $0 } ) -> [T] {
-        var mappedValues = [T]()
-        depthFirstForEach({ value, depth in
-            let mappedValue = callback(value)
-            mappedValues.append(mappedValue)
-        })
-        return mappedValues
-    }
-    
-    public func widthFirstMap(_ callback: (T) -> T = { $0 } ) -> [T] {
-        var mappedValues = [T]()
-        widthFirstForEach({ value, depth in
-            let mappedValue = callback(value)
-            mappedValues.append(mappedValue)
-        })
-        return mappedValues
-    }
 }
 
-extension Tree where T: Equatable {
+extension TreeEnumerable where T: Equatable {
     public func depthFirstSearch(value: T) -> Bool {
         var found = false
         
@@ -153,8 +163,8 @@ extension Tree where T: Equatable {
         return found
     }
     
-    public func orderedComparison(to: Tree) -> Bool {
-        guard self !== to else {
+    public func orderedComparison(to: Tree<T>) -> Bool {
+        guard self as! Tree<T> !== to else {
             return true
         }
         
