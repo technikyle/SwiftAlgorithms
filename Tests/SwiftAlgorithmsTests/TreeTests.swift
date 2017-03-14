@@ -26,6 +26,27 @@ class TreeTests: XCTestCase {
         XCTAssert(rootChild1 === child)
     }
     
+    func testRemove() {
+        let value = 1
+        let root = Tree<Int>(value: value)
+        
+        let value2 = 2
+        let child = Tree<Int>(value: value2)
+        root.insert(child)
+        
+        let value3 = 0
+        let grandchild = Tree<Int>(value: value3)
+        child.insert(grandchild)
+        
+        XCTAssert(root.widthFirstSearch(value: 0))
+        root.remove(descendant: grandchild)
+        XCTAssertFalse(root.widthFirstSearch(value: 0))
+        
+        XCTAssert(root.widthFirstSearch(value: 2))
+        root.remove(descendant: child)
+        XCTAssertFalse(root.widthFirstSearch(value: 2))
+    }
+    
     func testDepthFirstForEachUntil() {
         let tree = TreeTestData.tree
         
@@ -72,39 +93,6 @@ class TreeTests: XCTestCase {
         XCTAssert(iteratedValues == [TreeTestData.value1, TreeTestData.value2, TreeTestData.value4, TreeTestData.value5])
     }
     
-    func testDepthFirstMap() {
-        let tree = TreeTestData.tree
-        
-        var mappedValues = tree.depthFirstMap({ value in
-            return value
-        })
-        XCTAssert(mappedValues == [TreeTestData.value1, TreeTestData.value2, TreeTestData.value3, TreeTestData.value4, TreeTestData.value5])
-        
-        func transform(value: Int) -> Int {
-            return value * value
-        }
-        let mappedValues2 = tree.depthFirstMap(transform)
-        let mappedValuesCheck = mappedValues.map(transform)
-        XCTAssert(mappedValues2 == mappedValuesCheck)
-    }
-    
-    func testWidthFirstMap() {
-        let tree = TreeTestData.tree
-        
-        var mappedValues = tree.widthFirstMap({ value in
-            return value
-        })
-        XCTAssert(mappedValues == [TreeTestData.value1, TreeTestData.value2, TreeTestData.value4, TreeTestData.value5, TreeTestData.value3])
-        
-        func transform(value: Int) -> Int {
-            return value * value
-        }
-        let mappedValues2 = tree.widthFirstMap(transform)
-        let mappedValuesCheck = mappedValues.map(transform)
-        XCTAssert(mappedValues2 == mappedValuesCheck)
-    }
-
-    
     func testDepthFirstSearch() {
         let tree = TreeTestData.tree
         
@@ -150,10 +138,8 @@ class TreeTests: XCTestCase {
             return value * 2
         }
         let transformedRoot = tree.map(transform)
-        let mappedTransformedRoot = transformedRoot.depthFirstMap()
-        let mappedCopy = copy.depthFirstMap(transform)
-        XCTAssert(mappedTransformedRoot == mappedCopy)
-
+        XCTAssert(transformedRoot.value == TreeTestData.value1 * 2)
+        XCTAssert(transformedRoot.children[0].value == TreeTestData.value2 * 2)
     }
     
     class TreeTestData {
@@ -187,10 +173,9 @@ class TreeTests: XCTestCase {
         return [
             ("testInit", testInit),
             ("testAdd", testInsert),
+            ("testRemove", testInsert),
             ("testDepthFirstForEachUntil", testDepthFirstForEachUntil),
             ("testWidthFirstForEachUntil", testWidthFirstForEachUntil),
-            ("testDepthFirstMap", testDepthFirstMap),
-            ("testWidthFirstMap", testWidthFirstMap),
             ("testDepthFirstSearch", testDepthFirstSearch),
             ("testWidthFirstSearch", testWidthFirstSearch),
             ("testOrderedComparison", testOrderedComparison),

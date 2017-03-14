@@ -18,6 +18,16 @@ final public class Tree<T>: TreeEnumerable {
     public func insert(_ child: Tree) {
         children.append(child)
     }
+    
+    public func remove(descendant: Tree) {
+        let index = children.index(where: { $0 === descendant})
+        if let index = index {
+            children.remove(at: index)
+        }
+        for child in children {
+            child.remove(descendant: descendant)
+        }
+    }
 }
 
 public protocol TreeEnumerable {
@@ -37,11 +47,7 @@ extension TreeEnumerable {
         return tree
     }
     
-    public func depthFirstForEach(_ callback: (T, UInt) -> Void) {
-        depthFirstForEach(callback, currentDepth: 0)
-    }
-    
-    private func depthFirstForEach(_ callback: (T, UInt) -> Void, currentDepth: UInt) {
+    public func depthFirstForEach(_ callback: (T, UInt) -> Void, currentDepth: UInt = 0) {
         callback(self.value, currentDepth)
         
         for child in children {
@@ -66,29 +72,7 @@ extension TreeEnumerable {
         }
     }
     
-    public func depthFirstMap(_ callback: (T) -> T = { $0 } ) -> [T] {
-        var mappedValues = [T]()
-        depthFirstForEach({ value, depth in
-            let mappedValue = callback(value)
-            mappedValues.append(mappedValue)
-        })
-        return mappedValues
-    }
-    
-    public func widthFirstMap(_ callback: (T) -> T = { $0 } ) -> [T] {
-        var mappedValues = [T]()
-        widthFirstForEach({ value, depth in
-            let mappedValue = callback(value)
-            mappedValues.append(mappedValue)
-        })
-        return mappedValues
-    }
-    
-    public func depthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool)) {
-        depthFirstForEach(callback, until: until, currentDepth: 0)
-    }
-    
-    private func depthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool), currentDepth: UInt) {
+    public func depthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool), currentDepth: UInt = 0) {
         if !until(self.value, currentDepth) {
             callback(self.value, currentDepth)
         } else {
@@ -109,11 +93,7 @@ extension TreeEnumerable {
         }
     }
     
-    public func widthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool)) {
-        widthFirstForEach(callback, until: until, currentDepth: 0)
-    }
-    
-    private func widthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool), currentDepth: UInt) {
+    public func widthFirstForEach(_ callback: (T, UInt) -> Void, until: @escaping ((T, UInt) -> Bool), currentDepth: UInt = 0) {
         var treeQueue = [(tree: Tree<T>, depth: UInt)]()
         treeQueue.append((self as! Tree<T>, 0))
         
